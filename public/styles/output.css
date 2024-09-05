@@ -1,0 +1,167 @@
+/* Reset básico para garantir consistência entre navegadores */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Estilo global */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f7fafc;
+  padding: 16px;
+}
+
+.container {
+  max-width: 768px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+h1 {
+  font-size: 2rem;
+  color: #1D4ED8;
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  font-size: 0.875rem;
+  color: #4a5568;
+  margin-bottom: 8px;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus {
+  border-color: #1D4ED8;
+  outline: none;
+}
+
+.treinamento {
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #f9fafb;
+  margin-bottom: 16px;
+}
+
+button {
+  display: inline-block;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #ffffff;
+  background-color: #1D4ED8;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #1E40AF;
+}
+
+#adicionarTreinamento {
+  color: #1D4ED8;
+  background-color: transparent;
+  border: none;
+  font-size: 0.875rem;
+  margin-top: 16px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+#adicionarTreinamento:hover {
+  color: #1E40AF;
+}
+
+/* Estilo da tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+th, td {
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #f9fafb;
+  color: #4a5568;
+}
+
+tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+/* Estilo para o status */
+.status-ativo { color: #4CAF50; } /* Green */
+.status-vencendo { color: #FFC107; } /* Amber */
+.status-vencido { color: #F44336; } /* Red */
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .container {
+    padding: 12px;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  table {
+    font-size: 0.75rem; /* Reduz o tamanho da fonte para telas pequenas */
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  th, td {
+    padding: 8px;
+  }
+}
+
+.search-result {
+  background-color: #f0f0f0; /* Fundo cinza claro */
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra leve */
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.search-result:hover {
+  background-color: #e0e0e0; /* Fundo mais escuro ao passar o mouse */
+}

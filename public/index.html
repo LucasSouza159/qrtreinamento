@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro e Pesquisa de Colaboradores</title>
+    <link href="styles/output.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Estilo para a barra de pesquisa */
+        .search-bar-container {
+            background-color: #1D4ED8;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .search-bar-container h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .search-bar-container input[type="text"] {
+            width: 100%;
+            max-width: 600px;
+            padding: 15px;
+            border-radius: 4px;
+            border: none;
+            outline: none;
+            font-size: 1.1rem;
+        }
+
+        .search-result {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .search-result:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Estilo para o formulário */
+        .form-section {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            display: none; /* Esconder inicialmente */
+        }
+
+        .form-section.active {
+            display: block; /* Mostrar se ativo */
+        }
+
+        .form-section h2 {
+            font-size: 2rem;
+            color: #1D4ED8;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #4a4a4a;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #1D4ED8;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1E40AF;
+        }
+
+        /* Estilo para os botões de alternância */
+        .toggle-buttons {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .toggle-buttons button {
+            margin: 0 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Pesquisa no Topo -->
+    <div class="search-bar-container">
+        <h1>Buscar Colaborador</h1>
+        <input type="text" id="pesquisa" placeholder="Digite a matrícula (6 dígitos)" autocomplete="off">
+        <div id="resultadosPesquisa" class="hidden mt-4"></div>
+    </div>
+
+    <div class="container">
+
+        <!-- Botões para alternar entre formulário manual e upload -->
+        <div class="toggle-buttons">
+            <button id="btnManual">Cadastrar Manualmente</button>
+            <button id="btnUpload">Upload de Excel</button>
+        </div>
+
+        <!-- Formulário Manual -->
+        <div id="formManual" class="form-section">
+            <h2>Cadastro de Colaborador</h2>
+            <form id="cadastroForm" class="space-y-6">
+                <div>
+                    <label for="nome">Nome do Colaborador:</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+
+                <div>
+                    <label for="matricula">Matrícula (6 dígitos):</label>
+                    <input type="text" id="matricula" name="matricula" maxlength="6" required>
+                </div>
+
+                <div>
+                    <label>Treinamentos:</label>
+                    <div id="treinamentos" class="space-y-4">
+                        <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
+                            <label for="treinamentoNome">Nome do Treinamento:</label>
+                            <input type="text" id="treinamentoNome" name="treinamentos[0][nome]" required>
+                            
+                            <label for="treinamentoDescricao" class="mt-2">Descrição:</label>
+                            <input type="text" id="treinamentoDescricao" name="treinamentos[0][descricao]">
+                            
+                            <label for="dataInicio" class="mt-2">Realizado em:</label>
+                            <input type="date" id="dataInicio" name="treinamentos[0][data_inicio]" required>
+                            
+                            <label for="dataFim" class="mt-2">Valido até:</label>
+                            <input type="date" id="dataFim" name="treinamentos[0][data_fim]" required>
+                            
+                            <label for="status" class="mt-2">Status:</label>
+                            <select id="status" name="treinamentos[0][status]" required>
+                                <option value="ativo">Ativo</option>
+                                <option value="vencendo">Vencendo</option>
+                                <option value="vencido">Vencido</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="adicionarTreinamento">Adicionar mais treinamento</button>
+                </div>
+             
+                <button type="submit">Cadastrar</button>
+            </form>
+        </div>
+
+        <!-- Formulário de Upload -->
+        <div id="formUpload" class="form-section">
+            <h2>Upload de Colaboradores via Excel</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <label for="file">Upload Excel:</label>
+                <input type="file" id="file" name="file" accept=".xlsx" required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('cadastroForm');
+            const adicionarTreinamentoBtn = document.getElementById('adicionarTreinamento');
+            const formManual = document.getElementById('formManual');
+            const formUpload = document.getElementById('formUpload');
+            const btnManual = document.getElementById('btnManual');
+            const btnUpload = document.getElementById('btnUpload');
+            let treinamentoCount = 1;
+
+            // Alternar entre os formulários
+            btnManual.addEventListener('click', () => {
+                formManual.classList.add('active');
+                formUpload.classList.remove('active');
+            });
+
+            btnUpload.addEventListener('click', () => {
+                formManual.classList.remove('active');
+                formUpload.classList.add('active');
+            });
+
+            // Adicionar mais treinamentos dinamicamente
+            adicionarTreinamentoBtn.addEventListener('click', () => {
+                const treinamentosDiv = document.getElementById('treinamentos');
+                
+                const div = document.createElement('div');
+                div.classList.add('border', 'border-gray-300', 'rounded-lg', 'p-4', 'mt-4');
+                div.innerHTML = `
+                    <label for="treinamentoNome${treinamentoCount}">Nome do Treinamento:</label>
+                    <input type="text" id="treinamentoNome${treinamentoCount}" name="treinamentos[${treinamentoCount}][nome]" required>
+                    
+                    <label for="treinamentoDescricao${treinamentoCount}" class="mt-2">Descrição:</label>
+                    <input type="text" id="treinamentoDescricao${treinamentoCount}" name="treinamentos[${treinamentoCount}][descricao]" required>
+                    
+                    <label for="dataInicio${treinamentoCount}" class="mt-2">Data de Início:</label>
+                    <input type="date" id="dataInicio${treinamentoCount}" name="treinamentos[${treinamentoCount}][data_inicio]" required>
+                    
+                    <label for="dataFim${treinamentoCount}" class="mt-2">Data de Fim:</label>
+                    <input type="date" id="dataFim${treinamentoCount}" name="treinamentos[${treinamentoCount}][data_fim]" required>
+                    
+                    <label for="status${treinamentoCount}" class="mt-2">Status:</label>
+                    <select id="status${treinamentoCount}" name="treinamentos[${treinamentoCount}][status]" required>
+                        <option value="ativo">Ativo</option>
+                        <option value="vencendo">Vencendo</option>
+                        <option value="vencido">Vencido</option>
+                    </select>
+                `;
+                treinamentosDiv.appendChild(div);
+                treinamentoCount++;
+            });
+
+            // Submeter o formulário de cadastro
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const colaboradorData = {
+                    nome: formData.get('nome'),
+                    matricula: formData.get('matricula'),
+                    treinamentos: []
+                };
+
+                for (let i = 0; i < treinamentoCount; i++) {
+                    colaboradorData.treinamentos.push({
+                        nome: formData.get(`treinamentos[${i}][nome]`),
+                        descricao: formData.get(`treinamentos[${i}][descricao]`),
+                        data_inicio: formData.get(`treinamentos[${i}][data_inicio]`),
+                        data_fim: formData.get(`treinamentos[${i}][data_fim]`),
+                        status: formData.get(`treinamentos[${i}][status]`)
+                    });
+                }
+
+                try {
+                    const response = await fetch('/colaborador', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(colaboradorData)
+                    });
+
+                    if (response.ok) {
+                        alert('Colaborador e treinamentos cadastrados com sucesso');
+                        form.reset();
+                    } else {
+                        alert('Erro ao cadastrar colaborador e treinamentos');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            });
+
+            // Pesquisa dinâmica
+            const pesquisaInput = document.getElementById('pesquisa');
+            pesquisaInput.addEventListener('input', async function() {
+                const matricula = this.value;
+
+                if (matricula.length === 6) {
+                    try {
+                        const response = await fetch(`/pesquisar/${matricula}`);
+                        const resultadosDiv = document.getElementById('resultadosPesquisa');
+
+                        if (response.ok) {
+                            const colaborador = await response.json();
+
+                            if (colaborador) {
+                                resultadosDiv.innerHTML = `
+                                    <div class="search-result" id="result${colaborador.id}">
+                                        <p class="font-bold">Nome: ${colaborador.nome}</p>
+                                        <p>Matrícula: ${colaborador.matricula}</p>
+                                    </div>
+                                `;
+                                resultadosDiv.classList.remove('hidden');
+
+                                // Redirecionar para a página de visualização ao clicar
+                                document.getElementById(`result${colaborador.id}`).addEventListener('click', () => {
+                                    window.location.href = `/visualizar.html?id=${colaborador.id}`;
+                                });
+                            } else {
+                                resultadosDiv.innerHTML = '<p>Nenhum colaborador encontrado</p>';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro:', error);
+                    }
+                } else {
+                    document.getElementById('resultadosPesquisa').classList.add('hidden');
+                }
+            });
+        });
+
+        // Upload de arquivo Excel
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('file');
+            
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/upload-excel', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Upload realizado com sucesso');
+                } else {
+                    alert('Erro ao realizar upload');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        });
+    </script>
+</body>
+</html>

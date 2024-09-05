@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamentos do Colaborador</title>
+    <link href="styles/output.css" rel="stylesheet">
+    <style>
+        .status-ativo { color: #4CAF50; } /* Green */
+        .status-vencendo { color: #FFC107; } /* Amber */
+        .status-vencido { color: #F44336; } /* Red */
+        .card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 24px; }
+    </style>
+</head>
+<body>
+    <div class="container card">
+        <h1 class="title">Treinamentos do Colaborador</h1>
+
+        <!-- Exibir Nome do Colaborador -->
+        <h2 class="subtitle" id="colaboradorNome"></h2>
+        
+        <h2 class="subtitle">Treinamentos</h2>
+
+        <!-- Lista de Treinamentos -->
+        <table class="training-table">
+            <thead>
+                <tr>
+                    <th class="table-header">Nome</th>
+                    <th class="table-header">Validade</th>
+                    <th class="table-header">Status</th>
+                </tr>
+            </thead>
+            <tbody id="treinamentosList" class="table-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const colaboradorId = urlParams.get('id');
+            const colaboradorNomeElement = document.getElementById('colaboradorNome');
+            const treinamentosListElement = document.getElementById('treinamentosList');
+
+            // Função para obter informações do colaborador
+            async function fetchColaborador() {
+                try {
+                    const response = await fetch(`/colaborador/${colaboradorId}`);
+                    if (response.ok) {
+                        const colaborador = await response.json();
+                        colaboradorNomeElement.textContent = colaborador.nome;
+                    } else {
+                        alert('Erro ao carregar informações do colaborador');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+
+            // Função para obter os treinamentos do colaborador
+            async function fetchTreinamentos() {
+                try {
+                    const response = await fetch(`/treinamentos/${colaboradorId}`);
+                    if (response.ok) {
+                        const treinamentos = await response.json();
+                        treinamentosListElement.innerHTML = treinamentos.map(treinamento => `
+                            <tr>
+                                <td class="table-cell">${treinamento.nome}</td>
+                                <td class="table-cell">${new Date(treinamento.data_fim).toLocaleDateString('pt-BR')}</td>
+                                <td class="table-cell ${treinamento.status === 'ativo' ? 'status-ativo' : treinamento.status === 'vencendo' ? 'status-vencendo' : 'status-vencido'}">${treinamento.status}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        alert('Erro ao carregar treinamentos');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+
+            // Carregar dados do colaborador e treinamentos
+            fetchColaborador();
+            fetchTreinamentos();
+        });
+    </script>
+</body>
+</html>

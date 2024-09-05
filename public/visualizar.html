@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizar Colaborador</title>
+    <link href="styles/output.css" rel="stylesheet">
+    <style>
+        .status-ativo { color: #4CAF50; } /* Green */
+        .status-vencendo { color: #FFC107; } /* Amber */
+        .status-vencido { color: #F44336; } /* Red */
+        .card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); padding: 24px; }
+        button { margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container card">
+        <h1 class="title">Informações do Colaborador</h1>
+
+        <!-- Exibir Nome do Colaborador -->
+        <h2 class="subtitle" id="colaboradorNome"></h2>
+
+        <!-- Formulário de Edição de Colaborador -->
+        <form id="editColaboradorForm" style="display: none;">
+            <label for="editColaboradorNome">Editar Nome do Colaborador:</label>
+            <input type="text" id="editColaboradorNome" class="border p-2 w-full">
+            
+            <h2 class="subtitle mt-4">Adicionar Novo Treinamento</h2>
+            <div id="novoTreinamento" class="mb-4">
+                <label>Nome do Treinamento:</label>
+                <input type="text" id="novoTreinamentoNome" class="border p-2 w-full">
+                
+                <label>Descrição:</label>
+                <input type="text" id="novoTreinamentoDescricao" class="border p-2 w-full">
+                
+                <label>Realizado em:</label>
+                <input type="date" id="novoTreinamentoInicio" class="border p-2 w-full">
+                
+                <label>Válido até:</label>
+                <input type="date" id="novoTreinamentoFim" class="border p-2 w-full">
+                
+                <label>Status:</label>
+                <select id="novoTreinamentoStatus" class="border p-2 w-full">
+                    <option value="ativo">Ativo</option>
+                    <option value="vencendo">Vencendo</option>
+                    <option value="vencido">Vencido</option>
+                </select>
+            </div>
+            <button type="button" id="saveColaboradorEdit" class="btn-primary">Salvar Alterações</button>
+            <button type="button" id="addTreinamento" class="btn-primary">Adicionar Treinamento</button>
+        </form>
+        <button id="editColaboradorButton" class="btn-primary">Editar Colaborador</button>
+        
+        <h2 class="subtitle">Treinamentos</h2>
+
+        <!-- Lista de Treinamentos -->
+        <table class="training-table">
+            <thead>
+                <tr>
+                    <th class="table-header">Nome</th>
+                    <th class="table-header">Validade</th>
+                    <th class="table-header">Status</th>
+                    <th class="table-header">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="treinamentosList" class="table-body"></tbody>
+        </table>
+
+        <!-- Botão para baixar QR Code -->
+        <button id="downloadQrCode" class="btn-primary">Baixar QR Code</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const colaboradorId = urlParams.get('id');
+            const colaboradorNomeElement = document.getElementById('colaboradorNome');
+            const treinamentosListElement = document.getElementById('treinamentosList');
+
+            const editColaboradorForm = document.getElementById('editColaboradorForm');
+            const editColaboradorButton = document.getElementById('editColaboradorButton');
+            const editColaboradorNomeInput = document.getElementById('editColaboradorNome');
+            const saveColaboradorEditButton = document.getElementById('saveColaboradorEdit');
+            const addTreinamentoButton = document.getElementById('addTreinamento');
+
+            const novoTreinamentoNomeInput = document.getElementById('novoTreinamentoNome');
+            const novoTreinamentoDescricaoInput = document.getElementById('novoTreinamentoDescricao');
+            const novoTreinamentoInicioInput = document.getElementById('novoTreinamentoInicio');
+            const novoTreinamentoFimInput = document.getElementById('novoTreinamentoFim');
+            const novoTreinamentoStatusInput = document.getElementById('novoTreinamentoStatus');
+
+            // Função para converter data ISO em formato yyyy-MM-dd
+            function formatDateToInput(value) {
+                if (!value) return '';
+                const date = new Date(value);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // Função para obter informações do colaborador
+            async function fetchColaborador() {
+                try {
+                    const response = await fetch(`/colaborador/${colaboradorId}`);
+                    if (response.ok) {
+                        const colaborador = await response.json();
+                        colaboradorNomeElement.textContent = colaborador.nome;
+                        editColaboradorNomeInput.value = colaborador.nome;
+                    } else {
+                        alert('Erro ao carregar informações do colaborador');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+
+            // Função para obter os treinamentos do colaborador
+            async function fetchTreinamentos() {
+                try {
+                    const response = await fetch(`/treinamentos/${colaboradorId}`);
+                    if (response.ok) {
+                        const treinamentos = await response.json();
+                        treinamentosListElement.innerHTML = treinamentos.map(treinamento => `
+                            <tr>
+                                <td class="table-cell">${treinamento.nome}</td>
+                                <td class="table-cell">${treinamento.data_fim ? new Date(treinamento.data_fim).toLocaleDateString('pt-BR') : 'Data não definida'}</td>
+                                <td class="table-cell ${treinamento.status === 'ativo' ? 'status-ativo' : treinamento.status === 'vencendo' ? 'status-vencendo' : 'status-vencido'}">${treinamento.status}</td>
+                                <td>
+                                    <button class="btn-primary" onclick="editTreinamento(${treinamento.id}, '${treinamento.nome}', '${treinamento.descricao}', '${formatDateToInput(treinamento.data_inicio)}', '${formatDateToInput(treinamento.data_fim)}', '${treinamento.status}')">Editar</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        alert('Erro ao carregar treinamentos');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            }
+
+            // Exibir o formulário de edição de colaborador
+            editColaboradorButton.addEventListener('click', () => {
+                editColaboradorForm.style.display = 'block';
+                editColaboradorButton.style.display = 'none';
+            });
+
+            // Salvar alterações no nome do colaborador
+            saveColaboradorEditButton.addEventListener('click', async () => {
+                const nome = editColaboradorNomeInput.value;
+                try {
+                    const response = await fetch(`/colaborador/${colaboradorId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ nome })
+                    });
+                    if (response.ok) {
+                        alert('Colaborador atualizado com sucesso');
+                        colaboradorNomeElement.textContent = nome;
+                        editColaboradorForm.style.display = 'none';
+                        editColaboradorButton.style.display = 'block';
+                    } else {
+                        alert('Erro ao atualizar colaborador');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            });
+
+            // Função para adicionar novo treinamento
+            addTreinamentoButton.addEventListener('click', async () => {
+                const novoTreinamento = {
+                    colaborador_id: colaboradorId,
+                    nome: novoTreinamentoNomeInput.value,
+                    descricao: novoTreinamentoDescricaoInput.value,
+                    data_inicio: novoTreinamentoInicioInput.value,
+                    data_fim: novoTreinamentoFimInput.value,
+                    status: novoTreinamentoStatusInput.value
+                };
+
+                try {
+                    const response = await fetch('/treinamento', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ colaborador_id: colaboradorId, treinamentos: [novoTreinamento] })
+                    });
+                    if (response.ok) {
+                        alert('Treinamento adicionado com sucesso');
+                        fetchTreinamentos(); // Atualiza a lista de treinamentos
+                        // Limpar os campos do novo treinamento
+                        novoTreinamentoNomeInput.value = '';
+                        novoTreinamentoDescricaoInput.value = '';
+                        novoTreinamentoInicioInput.value = '';
+                        novoTreinamentoFimInput.value = '';
+                        novoTreinamentoStatusInput.value = 'ativo';
+                    } else {
+                        alert('Erro ao adicionar treinamento');
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                }
+            });
+
+            // Função para editar treinamento existente
+            window.editTreinamento = (treinamentoId, nome, descricao, data_inicio, data_fim, status) => {
+    const formHtml = `
+        <form id="editTreinamentoForm">
+            <label>Nome do Treinamento:</label>
+            <input type="text" id="editTreinamentoNome" value="${nome}" class="border p-2 w-full">
+            
+            <label>Descrição:</label>
+            <input type="text" id="editTreinamentoDescricao" value="${descricao}" class="border p-2 w-full">
+            
+            <label>Data de Início:</label>
+            <input type="date" id="editTreinamentoInicio" value="${data_inicio}" class="border p-2 w-full">
+            
+            <label>Data de Fim:</label>
+            <input type="date" id="editTreinamentoFim" value="${data_fim}" class="border p-2 w-full">
+            
+            <label>Status:</label>
+            <select id="editTreinamentoStatus" class="border p-2 w-full">
+                <option value="ativo" ${status === 'ativo' ? 'selected' : ''}>Ativo</option>
+                <option value="vencendo" ${status === 'vencendo' ? 'selected' : ''}>Vencendo</option>
+                <option value="vencido" ${status === 'vencido' ? 'selected' : ''}>Vencido</option>
+            </select>
+            
+            <button type="button" id="saveTreinamentoEdit" class="btn-primary">Salvar Alterações</button>
+        </form>
+    `;
+    treinamentosListElement.insertAdjacentHTML('beforeend', formHtml);
+
+    document.getElementById('saveTreinamentoEdit').addEventListener('click', async () => {
+        const updatedTreinamento = {
+            nome: document.getElementById('editTreinamentoNome').value,
+            descricao: document.getElementById('editTreinamentoDescricao').value,
+            data_inicio: document.getElementById('editTreinamentoInicio').value,
+            data_fim: document.getElementById('editTreinamentoFim').value,
+            status: document.getElementById('editTreinamentoStatus').value
+        };
+
+        try {
+            const response = await fetch(`/treinamento/${treinamentoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedTreinamento)
+            });
+            if (response.ok) {
+                alert('Treinamento atualizado com sucesso');
+                fetchTreinamentos();  // Atualiza a lista de treinamentos
+            } else {
+                alert('Erro ao atualizar treinamento');
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+        }
+    });
+};
+
+
+
+            // Função para baixar o QR Code
+            document.getElementById('downloadQrCode').addEventListener('click', () => {
+                if (colaboradorId) {
+                    window.location.href = `/qrcode/download/${colaboradorId}`;
+                }
+            });
+
+            // Carregar dados do colaborador e treinamentos
+            fetchColaborador();
+            fetchTreinamentos();
+        });
+
+        
+    </script>
+</body>
+</html>
